@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "llm-reviewer"
+version = "0.1.0"
+description = ""
+authors = ["Romulo Assis <romulo.assis@ifood.com.br>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.4"
+langchain = "0.3.6"
+langchain-community = "^0.3.5"
+importlib = "^1.0.4"
+streamlit = "^1.40.0"
+langchain-huggingface = "^0.1.2"
+langchain-openai = "^0.3.3"
+langchain-chroma = "^0.2.1"
+uuid = "^1.30"
+chromadb = "^0.6.3"
+poetry-plugin-dotenv = "^2.6.1"
+
+[tool.poetry.group.dev.dependencies]
+langchain-ollama = "^0.2.0"
+
+[tool.poetry.scripts]
+dev = "llm_reviewer.app:main"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.poetry.plugins.dotenv]
+ignore = "false"
+location = ".env"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

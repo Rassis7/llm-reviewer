@@ -1,0 +1,45 @@
+diff --git a/src/pages/PaginaPrincipal.js b/src/pages/PaginaPrincipal.js
+index 123abc..456def 100644
+--- a/src/pages/PaginaPrincipal.js
++++ b/src/pages/PaginaPrincipal.js
+@@ -1,5 +1,6 @@
+ import React, { useState, useEffect } from 'react';
+-import './PaginaPrincipal.css';
++import './PaginaPrincipal.css'; // Violação: estilo direto em CSS ao invés de Styled Components
+ 
+ const PaginaPrincipal = () => {
+-  const [visible, setVisible] = useState(true);
++  const [visible, setVisible] = useState(true); // Estado simples que poderia estar no componente de botão
+ 
+-  return (
+-    <div>
+-      <h1>Home</h1>
+-      <button onClick={() => setVisible(!visible)}>Toggle Visibilidade</button>
+-      <div className="content">
+-        {visible && <p>Conteúdo visível!</p>}
+-      </div>
++  // Lógica que controla visibilidade em um efeito que roda em toda renderização
++  useEffect(() => {
++    if (visible) {
++      console.log("Botão está visível");
++    }
++  });
++
++  const handleClick = () => {
++    setVisible(!visible);
++  };
++
++  return (
++    <div>
++      <h1>Home</h1>
++      <button onClick={handleClick}>Toggle Visibilidade</button>
++      <button onClick={() => alert('Botão 2 clicado!')}>Botão 2</button> {/* Violação: lógica inline */}
++      <div className="extra-div"> {/* Violação: uso de classes CSS genéricas */}
++        {visible && <p>Conteúdo visível!</p>}
++      </div>
+     </div>
+   );
+ };
+ 
+-export default PaginaPrincipal;
++export default PaginaPrincipal;
