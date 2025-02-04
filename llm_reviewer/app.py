@@ -20,7 +20,7 @@ def load_file(file_name: str) -> str:
 
 
 def load_embeddings():
-    generic_embedding = Embedding(embedding=AcceptableEmbeddings.HUGGING_FACE)
+    generic_embedding = Embedding(embedding=AcceptableEmbeddings.OPEN_AI)
     return generic_embedding.embedding
 
 
