@@ -2,7 +2,7 @@
 name = "llm-reviewer"
 version = "0.1.0"
 description = ""
-authors = ["Romulo Assis <romulo.assis@ifood.com.br>"]
+authors = ["Romulo Assis <romuloassis.as@gmail.com.br>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
