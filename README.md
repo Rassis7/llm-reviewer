@@ -39,10 +39,62 @@ Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with genera
 
 ## Project 🏎️
 
+### Virtual Environment (venv)
+
+> You need `python3` with minimum version `@3.12.4`
+
+Start venv
+
+```bash
+poetry env use python3
+```
+
+---
+
+If you recived follow error:
+
+```
+The currently activated Python version 3.X.X is not supported by the project (3.12.4).
+Trying to find and use a compatible version.
+```
+
+Install `pyenv`:
+
+Macos
+
+```bash
+brew install pyenv
+```
+
+Unix System:
+
+```bash
+curl https://pyenv.run | bash
+```
+
+After install `python@3.12.4`
+
+```bash
+pyenv install 3.12.4
+```
+
+Use version in project
+
+```bash
+pyenv local 3.12.4
+poetry env use $(pyenv which python)
+```
+
 ### Install deps
 
 ```bash
 poetry install
+```
+
+> if .env not works, you run follow command:
+
+```bash
+poetry self add poetry-plugin-dotenv
 ```
 
 ### Run project
