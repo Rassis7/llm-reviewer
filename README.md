@@ -69,6 +69,7 @@ poetry run dev
 
 - [x] Allow the use of more than one model
 - [x] Use various types of embeddings
+- [ ] Add AI agent (next feature)
 - [ ] Enable dynamic uploading of the rules file
 - [ ] Split the DIFF file into individual diffs (by checking the token count)
 
