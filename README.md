@@ -14,6 +14,18 @@ This tool analyzes code blocks and returns suggestions, identifies inadequate st
 - **Customization and Extensibility:**  
   The project was developed with extensibility in mind, allowing users to adjust parameters, improve language models, and expand features when necessary.
 
+## Example 👀
+
+### Files
+
+-> [Good Coding Practices](llm_reviewer/files/good-code.md)
+
+-> [Pull Request](llm_reviewer/files/pull-request.txt)
+
+### Response
+
+<img src="docs/image.png" />
+
 ## Stack 🧩
 
 - **Language:** Python, Poetry and LangChain
