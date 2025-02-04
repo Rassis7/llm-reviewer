@@ -14,7 +14,13 @@ This tool analyzes code blocks and returns suggestions, identifies inadequate st
 - **Customization and Extensibility:**  
   The project was developed with extensibility in mind, allowing users to adjust parameters, improve language models, and expand features when necessary.
 
-## Example 👀
+## What is RAG? 🤨
+
+Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with generative models. It first fetches contextually relevant external information, then leverages this data to produce enhanced, accurate, and informed responses—allowing AI to generate context-aware outputs beyond its static training data.
+
+<img src="docs/rag.png" />
+
+## Running Application (Example) 👀
 
 ### Files
 
@@ -24,7 +30,7 @@ This tool analyzes code blocks and returns suggestions, identifies inadequate st
 
 ### Response
 
-<img src="docs/image.png" />
+<img src="docs/example.png" />
 
 ## Stack 🧩
 
