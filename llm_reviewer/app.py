@@ -1,31 +1,30 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnablePassthrough,
+)
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 
-from llm_reviewer.llm import LLM, AcceptableLLMModels
+from llm_reviewer.llm import LLM, AcceptableLLMModels, PromptTemplate
 from llm_reviewer.vector_store import VectorStore
-from llm_reviewer.embeddings import Embedding, AcceptableEmbeddings
-from typing import Optional, List, Dict
+from llm_reviewer.embeddings import Embeddings
+from typing import Optional, List
 import os
+import importlib.resources
 
 
 def load_file(file_name: str) -> str:
-    import importlib.resources
 
     with importlib.resources.open_text("llm_reviewer.files", file_name) as file:
         content = file.read()
     return content
 
 
-def load_embeddings():
-    generic_embedding = Embedding(embedding=AcceptableEmbeddings.OPEN_AI)
-    return generic_embedding.embedding
-
-
 def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
-    embedding = load_embeddings()
+    print("🪣 Loading vector store...")
+    embedding = Embeddings.load()
 
     return VectorStore().load(
         path=os.environ["DB_PATH"],
@@ -36,6 +35,7 @@ def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
 
 
 def create_vector_loader() -> VectorStore:
+    print("🪣 Creating vector loader")
     goo_code_rules = load_file("good-code.md")
     doc = Document(page_content=goo_code_rules)
 
@@ -54,8 +54,15 @@ def load_knowledge_base() -> VectorStore:
         return new_db
 
 
-def load_llm():
-    llm = LLM(model=AcceptableLLMModels.GPT4)
+def load_conversation_model():
+    print("🤖 Loading conversation llm model")
+    llm = LLM(model=AcceptableLLMModels.CONVERSATION_MODEL)
+    return llm.model
+
+
+def load_code_model():
+    print("🧑‍💻 Loading coder llm model")
+    llm = LLM(model=AcceptableLLMModels.CODE_MODEL)
     return llm.model
 
 
@@ -63,29 +70,49 @@ def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
 
+def map_review_to_format(chain_output):
+    print(f"🔍 Mapping review to format: {chain_output}")
+    return {"reviewed_code": chain_output}
+
+
 def main():
     knowledgeBase = load_knowledge_base()
-    llm = load_llm()
-    prompt = LLM.load_prompt()
-    pull_request = load_file("pull-request.txt")
+    llm_code_model = load_code_model()
+    context_prompt = LLM.load_prompt(prompt=PromptTemplate.CONTEXT)
+    llm_conversation_model = load_conversation_model()
+    response_prompt = LLM.load_prompt(prompt=PromptTemplate.RESPONSE)
 
-    embedding = load_embeddings()
+    pull_request = load_file("pull-request.txt")
+    embedding = Embeddings.load()
 
     retriever = knowledgeBase.get_retriever_from_similar(
         query=pull_request, embeddings=embedding
     )
 
-    rag_chain = (
+    mapping_step = RunnableLambda(map_review_to_format)
+
+    code_review_chain = (
         {"context": retriever | format_docs, "input": RunnablePassthrough()}
-        | prompt
-        | llm
+        | context_prompt
+        | llm_code_model
         | StrOutputParser()
     )
 
+    output_format_chain = (
+        {"reviewed_code": RunnablePassthrough()}
+        | response_prompt
+        | llm_conversation_model
+        | StrOutputParser()
+    )
+
+    final_chain = code_review_chain | mapping_step | output_format_chain
+
     pull_request = load_file("pull-request.txt")
 
-    response = rag_chain.invoke(pull_request)
-    print(f"RESPONSE: {response}")
+    response = final_chain.invoke(pull_request)
+    with importlib.resources.path("llm_reviewer.files", "code_review.md") as path:
+        with path.open("w", encoding="utf-8") as file:
+            file.write(response)
 
 
 if __name__ == "__main__":
