@@ -68,7 +68,6 @@ class VectorStore(IVectorStore):
                 embedding_function=embedding,
                 collection_name=collection_name,
             )
-            print("🪣 Got vector store")
 
         return VectorStore(store)  # type: ignore
 

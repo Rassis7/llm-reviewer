@@ -13,6 +13,8 @@ from llm_reviewer.embeddings import Embeddings
 from typing import Optional, List
 import os
 import importlib.resources
+import json
+import re
 
 
 def load_file(file_name: str) -> str:
@@ -71,8 +73,36 @@ def format_docs(docs):
 
 
 def map_review_to_format(chain_output):
-    print(f"🔍 Mapping review to format: {chain_output}")
+    print(f"🔍 Mapping review to format")
     return {"reviewed_code": chain_output}
+
+
+def format_and_save_json_response(chain_output):
+    print(f"👀 Pull Request JSON response: {chain_output}")
+
+    match = re.search(r"\[\s*\{.*\}\s*\]", chain_output, re.DOTALL)
+    if match:
+        json_str = match.group(0).strip()
+        try:
+            array_obj = json.loads(json_str)
+            print("✅ JSON processed with success!")
+
+            with importlib.resources.path(
+                "llm_reviewer.files", "code_review.json"
+            ) as path:
+                with path.open("w", encoding="utf-8") as file:
+                    json.dump(array_obj, file, indent=4, ensure_ascii=False)
+
+            print("📂 JSON response saved in 'code_review.json'")
+            return array_obj
+
+        except json.JSONDecodeError as e:
+            print("❌ JSON Decode error:", e)
+
+    else:
+        print("❌ No JSON found")
+
+    return None
 
 
 def main():
@@ -81,8 +111,8 @@ def main():
     context_prompt = LLM.load_prompt(prompt=PromptTemplate.CONTEXT)
     llm_conversation_model = load_conversation_model()
     response_prompt = LLM.load_prompt(prompt=PromptTemplate.RESPONSE)
-
     pull_request = load_file("pull-request.txt")
+
     embedding = Embeddings.load()
 
     retriever = knowledgeBase.get_retriever_from_similar(
@@ -90,6 +120,7 @@ def main():
     )
 
     mapping_step = RunnableLambda(map_review_to_format)
+    format_json_step = RunnableLambda(format_and_save_json_response)
 
     code_review_chain = (
         {"context": retriever | format_docs, "input": RunnablePassthrough()}
@@ -105,14 +136,21 @@ def main():
         | StrOutputParser()
     )
 
-    final_chain = code_review_chain | mapping_step | output_format_chain
-
-    pull_request = load_file("pull-request.txt")
+    final_chain = (
+        code_review_chain | format_json_step | mapping_step | output_format_chain
+    )
 
     response = final_chain.invoke(pull_request)
-    with importlib.resources.path("llm_reviewer.files", "code_review.md") as path:
-        with path.open("w", encoding="utf-8") as file:
-            file.write(response)
+
+    if response:
+        response_str = str(response)
+        print(f"🔥 Response: {response_str}")
+
+        with importlib.resources.path("llm_reviewer.files", "code_review.md") as path:
+            with path.open("w", encoding="utf-8") as file:
+                file.write(response_str)
+    else:
+        print("❌ No response generated")
 
 
 if __name__ == "__main__":
