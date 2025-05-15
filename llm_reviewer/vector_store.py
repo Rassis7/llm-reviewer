@@ -1,11 +1,13 @@
 from langchain_chroma import Chroma
-from llm_reviewer.embeddings import Embedding
 from uuid import uuid4
-from typing import Optional, List, Dict, TypeVar
+from typing import Optional, List, TypeVar
 from langchain_core.documents import Document
 from abc import ABC, abstractmethod
+from langchain_openai import OpenAIEmbeddings
 
 Self = TypeVar("Self", bound="Base")  # type: ignore
+
+Embeddings = OpenAIEmbeddings
 
 
 class IVectorStore(ABC):
@@ -14,7 +16,7 @@ class IVectorStore(ABC):
         self: Self,
         path: str,
         collection_name: str,
-        embeddings: Embedding,
+        embeddings: Embeddings,
         documents: Optional[List[Document]] = None,
     ) -> Self:
         raise NotImplementedError
@@ -29,7 +31,7 @@ class IVectorStore(ABC):
 
     @abstractmethod
     def get_retriever_from_similar(
-        self: Self, query: str, embeddings: Embedding, k: int = 2
+        self: Self, query: str, embeddings: Embeddings, k: int = 2
     ) -> Chroma:
         raise NotImplementedError
 
@@ -44,9 +46,9 @@ class VectorStore(IVectorStore):
         self: Self,
         path: str,
         collection_name: str,
-        embedding: Embedding,
+        embedding: OpenAIEmbeddings,
         documents: Optional[List[Document]] = None,
-    ) -> Self:
+    ):
         """
         Inicializa ou carrega um banco de vetores Chroma.
 
@@ -54,6 +56,7 @@ class VectorStore(IVectorStore):
         - Se não houver, carrega a persistência existente.
         """
         store = None
+
         if documents and len(documents) > 0:
             store = Chroma.from_documents(
                 documents=documents,
@@ -68,9 +71,9 @@ class VectorStore(IVectorStore):
                 collection_name=collection_name,
             )
 
-        return VectorStore(store)  # type: ignore
+        return VectorStore(store)
 
-    def save_documents(self, documents: List[dict]):
+    def save_documents(self, documents: List[Document]):
         """
         Adiciona novos documentos ao Chroma e persiste a atualização.
         """
@@ -79,9 +82,8 @@ class VectorStore(IVectorStore):
 
         uuids = [str(uuid4()) for _ in documents]
         self.store.add_documents(documents=documents, ids=uuids)
-        self.store.persist()
 
-    def get_query(self, query: str, k: int = 2) -> List[dict]:
+    def get_query(self, query: str, k: int = 2):
         """
         Realiza uma busca por similaridade no banco de vetores.
         """
@@ -91,8 +93,8 @@ class VectorStore(IVectorStore):
         return self.store.similarity_search(query, k=k)
 
     def get_retriever_from_similar(
-        self, query: str, embeddings: Embedding, k: int = 2
-    ) -> Chroma:
+        self, query: str, embeddings: Embeddings, k: int = 2
+    ):
         """
         Busca documentos similares à consulta e cria um novo retriever com eles.
         """
