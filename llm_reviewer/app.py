@@ -62,7 +62,7 @@ def load_knowledge_base() -> VectorStore:
 
 
 def load_llm():
-    llm = LLM(model=AcceptableLLMModels.GPT4)
+    llm = LLM(model=AcceptableLLMModels.LLAMA)
     return llm.model
 
 
