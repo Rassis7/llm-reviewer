@@ -1,4 +1,4 @@
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 class AcceptableEmbeddings:
@@ -12,7 +12,9 @@ class Embedding:
         self.__load(embedding)
 
     def __load_open_ai(self):
-        self.embedding = OpenAIEmbeddings(model="text-embedding-3-large")
+        self.embedding = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-mpnet-base-v2"
+        )
 
     def __load(self, embedding: AcceptableEmbeddings):
         if embedding == AcceptableEmbeddings.OPEN_AI:

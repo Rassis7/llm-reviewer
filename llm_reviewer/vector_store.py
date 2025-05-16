@@ -3,11 +3,11 @@ from uuid import uuid4
 from typing import Optional, List, TypeVar
 from langchain_core.documents import Document
 from abc import ABC, abstractmethod
-from langchain_openai import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 Self = TypeVar("Self", bound="Base")  # type: ignore
 
-Embeddings = OpenAIEmbeddings
+Embeddings = HuggingFaceEmbeddings
 
 
 class IVectorStore(ABC):
