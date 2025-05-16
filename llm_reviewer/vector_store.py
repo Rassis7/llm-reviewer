@@ -1,5 +1,4 @@
 from langchain_chroma import Chroma
-
 from uuid import uuid4
 from typing import Optional, List, TypeVar
 from langchain_core.documents import Document
@@ -49,7 +48,7 @@ class VectorStore(IVectorStore):
         collection_name: str,
         embedding: Embeddings,
         documents: Optional[List[Document]] = None,
-    ) -> Self:
+    ):
         """
         Initializes or loads a Chroma vector database.
 
@@ -57,6 +56,7 @@ class VectorStore(IVectorStore):
         - If not, loads the existing persistence.
         """
         store = None
+
         if documents and len(documents) > 0:
             store = Chroma.from_documents(
                 documents=documents,
@@ -72,7 +72,7 @@ class VectorStore(IVectorStore):
                 collection_name=collection_name,
             )
 
-        return VectorStore(store)  # type: ignore
+        return VectorStore(store)
 
     def save_documents(self, documents: List[Document]):
         """

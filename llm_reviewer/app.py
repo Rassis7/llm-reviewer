@@ -131,11 +131,11 @@ def main():
         merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
     )
 
-    embedding = load_embeddings()
+        embedding = load_embeddings()
 
-    retriever = knowledgeBase.get_retriever_from_similar(
-        query=pull_request, embeddings=embedding
-    )
+        retriever = knowledgeBase.get_retriever_from_similar(
+            query=pull_request, embeddings=embedding
+        )
 
     mapping_step = RunnableLambda(map_review_to_format)
     format_json_step = RunnableLambda(format_and_save_json_response)
