@@ -3,3 +3,5 @@
 .mypy_cache
 vectorstore
 llm_reviewer/__pycache__
+llm_reviewer/docs
+llm_reviewer/response

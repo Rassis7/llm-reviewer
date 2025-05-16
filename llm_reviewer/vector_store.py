@@ -1,11 +1,14 @@
 from langchain_chroma import Chroma
-from llm_reviewer.embeddings import Embeddings
+
 from uuid import uuid4
 from typing import Optional, List, TypeVar
 from langchain_core.documents import Document
 from abc import ABC, abstractmethod
+from langchain_openai import OpenAIEmbeddings
 
 Self = TypeVar("Self", bound="Base")  # type: ignore
+
+Embeddings = OpenAIEmbeddings
 
 
 class IVectorStore(ABC):
@@ -71,7 +74,7 @@ class VectorStore(IVectorStore):
 
         return VectorStore(store)  # type: ignore
 
-    def save_documents(self, documents: List[dict]):
+    def save_documents(self, documents: List[Document]):
         """
         Adds new documents to Chroma and persists the update.
         """
@@ -80,10 +83,9 @@ class VectorStore(IVectorStore):
 
         uuids = [str(uuid4()) for _ in documents]
         self.store.add_documents(documents=documents, ids=uuids)
-        self.store.persist()
         print("✅ Saved documents")
 
-    def get_query(self, query: str, k: int = 2) -> List[dict]:
+    def get_query(self, query: str, k: int = 4):
         """
         Performs a similarity search in the vector bank.
         """
@@ -94,8 +96,8 @@ class VectorStore(IVectorStore):
         return self.store.similarity_search(query, k=k)
 
     def get_retriever_from_similar(
-        self, query: str, embeddings: Embeddings, k: int = 2
-    ) -> Chroma:
+        self, query: str, embeddings: Embeddings, k: int = 4
+    ):
         """
         Searches for documents similar to the query and creates a new retriever with them.
         """

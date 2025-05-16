@@ -6,10 +6,13 @@ from langchain_core.runnables import (
 )
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
+from langchain_docling import DoclingLoader
 
+from llm_reviewer.git import Git
 from llm_reviewer.llm import LLM, AcceptableLLMModels, PromptTemplate
 from llm_reviewer.vector_store import VectorStore
-from llm_reviewer.embeddings import Embeddings
+from llm_reviewer.embeddings import Embedding, AcceptableEmbeddings
+
 from typing import Optional, List
 import os
 import importlib.resources
@@ -17,16 +20,14 @@ import json
 import re
 
 
-def load_file(file_name: str) -> str:
-
-    with importlib.resources.open_text("llm_reviewer.files", file_name) as file:
-        content = file.read()
-    return content
+def load_embeddings():
+    generic_embedding = Embedding(embedding=AcceptableEmbeddings.OPEN_AI)
+    return generic_embedding.embedding
 
 
 def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
     print("🪣 Loading vector store...")
-    embedding = Embeddings.load()
+    embedding = load_embeddings()
 
     return VectorStore().load(
         path=os.environ["DB_PATH"],
@@ -36,15 +37,28 @@ def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
     )
 
 
+def normalize_documents():
+    docs_dir = os.path.join(os.path.dirname(__file__), "../llm_reviewer/docs")
+    file_paths = [
+        os.path.join(docs_dir, f)
+        for f in os.listdir(docs_dir)
+        if os.path.isfile(os.path.join(docs_dir, f))
+    ]
+    loader = DoclingLoader(file_paths)
+    documents = loader.load()
+    markdown_docs = [doc.page_content for doc in documents]
+    return markdown_docs
+
+
 def create_vector_loader() -> VectorStore:
     print("🪣 Creating vector loader")
-    goo_code_rules = load_file("good-code.md")
-    doc = Document(page_content=goo_code_rules)
+    documents = normalize_documents()
+    docs = [Document(page_content=doc) for doc in documents]
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    documents = text_splitter.split_documents([doc])
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    split_docs = text_splitter.split_documents(docs)
 
-    return load_store(documents)
+    return load_store(split_docs)
 
 
 def load_knowledge_base() -> VectorStore:
@@ -78,8 +92,6 @@ def map_review_to_format(chain_output):
 
 
 def format_and_save_json_response(chain_output):
-    print(f"👀 Pull Request JSON response: {chain_output}")
-
     match = re.search(r"\[\s*\{.*\}\s*\]", chain_output, re.DOTALL)
     if match:
         json_str = match.group(0).strip()
@@ -88,7 +100,7 @@ def format_and_save_json_response(chain_output):
             print("✅ JSON processed with success!")
 
             with importlib.resources.path(
-                "llm_reviewer.files", "code_review.json"
+                "llm_reviewer.response", "code_review.json"
             ) as path:
                 with path.open("w", encoding="utf-8") as file:
                     json.dump(array_obj, file, indent=4, ensure_ascii=False)
@@ -111,9 +123,15 @@ def main():
     context_prompt = LLM.load_prompt(prompt=PromptTemplate.CONTEXT)
     llm_conversation_model = load_conversation_model()
     response_prompt = LLM.load_prompt(prompt=PromptTemplate.RESPONSE)
-    pull_request = load_file("pull-request.txt")
 
-    embedding = Embeddings.load()
+    token = os.environ["GIT_TOKEN"]
+    fetcher = Git(token=token)
+    pull_request = fetcher.get_diff(
+        project_id=os.environ["GIT_PROJECT_ID"],
+        merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
+    )
+
+    embedding = load_embeddings()
 
     retriever = knowledgeBase.get_retriever_from_similar(
         query=pull_request, embeddings=embedding
@@ -144,11 +162,14 @@ def main():
 
     if response:
         response_str = str(response)
-        print(f"🔥 Response: {response_str}")
 
-        with importlib.resources.path("llm_reviewer.files", "code_review.md") as path:
+        with importlib.resources.path(
+            "llm_reviewer.response", "code_review.md"
+        ) as path:
             with path.open("w", encoding="utf-8") as file:
                 file.write(response_str)
+
+        print(f"🔥 Created code_review.md file")
     else:
         print("❌ No response generated")
 

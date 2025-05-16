@@ -4,6 +4,8 @@ from langchain_core.prompts import ChatPromptTemplate
 import os
 import importlib.resources as importlib
 
+# from langchain_openai import ChatOpenAI
+
 
 class AcceptableLLMModels(Enum):
     CODE_MODEL = os.environ["CODE_MODEL"]
@@ -28,13 +30,16 @@ class LLM:
         self.model = ChatOllama(
             model=self.__llm_model.value,
             base_url=os.environ["OLLAMA_API_URL"],
-            # temperature=float(os.environ["TEMPERATURE"] or 0.5),
-            # max_tokens=int(os.environ["MAX_TOKENS"] or 100),
-            # top_p=float(os.environ["TOP_P"] or 0.9),
-            # top_k=int(os.environ["TOP_K"] or 50),
-            # presence_penalty=float(os.environ["PRESENCE_PENALTY"] or 0.0),
-            # frequency_penalty=float(os.environ["FREQUENCY_PENALTY"] or 0.0),
+            temperature=0.3,
         )
+        # self.model = ChatOpenAI(
+        #     model="gpt-4o-mini",
+        #     temperature=0,
+        #     max_completion_tokens=700,
+        #     timeout=None,
+        #     max_retries=2,
+        #     api_key=os.environ["OPENAI_API_KEY"],
+        # )
 
     @staticmethod
     def load_prompt(prompt: PromptTemplate):
