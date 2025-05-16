@@ -106,8 +106,8 @@ def main():
         token = os.environ["GIT_TOKEN"]
         fetcher = Git(token=token)
         pull_request = fetcher.get_diff(
-            project_id=19655,
-            merge_request_iid=68,
+            project_id=os.environ["GIT_PROJECT_ID"],
+            merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
         )
 
         embedding = load_embeddings()
