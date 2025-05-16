@@ -26,10 +26,6 @@ class IVectorStore(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_query(self: Self, query: str, k: int) -> List[dict]:
-        raise NotImplementedError
-
-    @abstractmethod
     def get_retriever_from_similar(
         self: Self, query: str, embeddings: Embeddings, k: int = 2
     ) -> Chroma:
@@ -83,17 +79,8 @@ class VectorStore(IVectorStore):
         uuids = [str(uuid4()) for _ in documents]
         self.store.add_documents(documents=documents, ids=uuids)
 
-    def get_query(self, query: str, k: int = 2):
-        """
-        Realiza uma busca por similaridade no banco de vetores.
-        """
-        if not self.store:
-            raise ValueError("VectorStore não foi carregado. Chame `load()` primeiro.")
-
-        return self.store.similarity_search(query, k=k)
-
     def get_retriever_from_similar(
-        self, query: str, embeddings: Embeddings, k: int = 2
+        self, query: str, embeddings: Embeddings, k: int = 4
     ):
         """
         Busca documentos similares à consulta e cria um novo retriever com eles.

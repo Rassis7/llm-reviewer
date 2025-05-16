@@ -5,20 +5,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 
 from llm_reviewer.llm import LLM, AcceptableLLMModels
+from llm_reviewer.git import Git
 from llm_reviewer.vector_store import VectorStore
 from llm_reviewer.embeddings import Embedding, AcceptableEmbeddings
 from typing import Optional, List
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_docling import DoclingLoader
 
 import os
-
-
-def load_file(path: str, file_name: str) -> str:
-    import importlib.resources
-
-    with importlib.resources.open_text(f"llm_reviewer.{path}", file_name) as file:
-        content = file.read()
-    return content
 
 
 def load_embeddings():
@@ -37,14 +31,25 @@ def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
     )
 
 
+def normalize_documents():
+    docs_dir = os.path.join(os.path.dirname(__file__), "../llm_reviewer/docs")
+    file_paths = [
+        os.path.join(docs_dir, f)
+        for f in os.listdir(docs_dir)
+        if os.path.isfile(os.path.join(docs_dir, f))
+    ]
+    loader = DoclingLoader(file_paths)
+    documents = loader.load()
+    markdown_docs = [doc.page_content for doc in documents]
+    return markdown_docs
+
+
 def create_vector_loader() -> VectorStore:
-    goo_code_rules = load_file("docs", "good-code.md")
-    doc = Document(page_content=goo_code_rules)
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    documents = text_splitter.split_documents([doc])
-
-    return load_store(documents)
+    documents = normalize_documents()
+    docs = [Document(page_content=doc) for doc in documents]
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    split_docs = text_splitter.split_documents(docs)
+    return load_store(split_docs)
 
 
 def load_knowledge_base() -> VectorStore:
@@ -85,6 +90,8 @@ def load_prompt():
                 - Point out only the discrepancies in relation to the given context.  
                 - Do not suggest introducing new libraries or technologies outside the context.  
                 - Always specify which file the line belongs to and display the line of code being reviewed.
+                - If there is no improvement observed in the file, just ignore it
+                - Do not add any comments or suggestions that deviate from what is explicitly stated in your instructions.
         """
     prompt = ChatPromptTemplate.from_template(prompt_template)
     return prompt
@@ -95,10 +102,15 @@ def main():
         knowledgeBase = load_knowledge_base()
         llm = load_llm()
         prompt = load_prompt()
-        pull_request = load_file("files", "pull-request.txt")
+
+        token = os.environ["GIT_TOKEN"]
+        fetcher = Git(token=token)
+        pull_request = fetcher.get_diff(
+            project_id=19655,
+            merge_request_iid=68,
+        )
 
         embedding = load_embeddings()
-
         retriever = knowledgeBase.get_retriever_from_similar(
             query=pull_request, embeddings=embedding
         )
@@ -111,7 +123,10 @@ def main():
         )
 
         response = rag_chain.invoke(pull_request)
-        print(f"RESPONSE: {response}")
+
+        with open("output.md", "w") as f:
+            f.write(response)
+
     except Exception as e:
         print(f"Error: {e}")
         raise
