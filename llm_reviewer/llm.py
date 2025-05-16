@@ -1,14 +1,23 @@
 from langchain_ollama import ChatOllama
 from enum import Enum
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 import os
+import importlib.resources as importlib
+
+# from langchain_openai import ChatOpenAI
 
 
 class AcceptableLLMModels(Enum):
-    LLAMA = "llama3.2:1b"
-    GPT4 = "gpt-4o"
-    GPT_MINI = "gpt-4o-mini"
+    CODE_MODEL = os.environ["CODE_MODEL"]
+    CONVERSATION_MODEL = os.environ["GEMMA_MODEL"]
+
+
+class PromptTemplate(Enum):
+    CONTEXT = "context.md"
+    RESPONSE = "response.md"
+
+
+PROMPT_PATH = "llm_reviewer.prompts"
 
 
 class LLM:
@@ -17,30 +26,24 @@ class LLM:
         self.model = None
         self.__load()
 
-    def __load_llama(self):
+    def __load(self):
         self.model = ChatOllama(
-            temperature=0,
             model=self.__llm_model.value,
             base_url=os.environ["OLLAMA_API_URL"],
+            temperature=0.3,
         )
+        # self.model = ChatOpenAI(
+        #     model="gpt-4o-mini",
+        #     temperature=0,
+        #     max_completion_tokens=700,
+        #     timeout=None,
+        #     max_retries=2,
+        #     api_key=os.environ["OPENAI_API_KEY"],
+        # )
 
-    def __load_gpt(self):
-        self.model = ChatOpenAI(
-            model=self.__llm_model.value,
-            temperature=0,
-            max_completion_tokens=700,
-            timeout=None,
-            max_retries=2,
-            api_key=os.environ["OPENAI_API_KEY"],
-        )
+    @staticmethod
+    def load_prompt(prompt: PromptTemplate):
+        with importlib.open_text(PROMPT_PATH, prompt.value) as prompt_template:
+            file = prompt_template.read()
 
-    def __load(self):
-        if self.__llm_model == AcceptableLLMModels.LLAMA:
-            return self.__load_llama()
-        if (
-            self.__llm_model == AcceptableLLMModels.GPT4
-            or self.__llm_model == AcceptableLLMModels.GPT_MINI
-        ):
-            return self.__load_gpt()
-        else:
-            print("No llm model loaded")
+        return ChatPromptTemplate.from_template(file)
