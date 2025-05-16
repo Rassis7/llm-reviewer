@@ -17,6 +17,7 @@ uuid = "^1.30"
 chromadb = "^0.6.3"
 poetry-plugin-dotenv = "^2.6.1"
 langchain-ollama = "^0.3.2"
+langchain-docling = "^0.2.0"
 
 [tool.poetry.scripts]
 dev = "llm_reviewer.app:main"
