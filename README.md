@@ -33,7 +33,8 @@ You need add your code documentations in `llm_reviewer/docs`
 After that, you must add the information in `.env`, like:
 
 ```
-OLLAMA_API_URL=http://localhost:11434 // Or another URL
+API_URL=http://localhost:11434 // Or another URL
+API_KEY= // Your LLM api key (if necessary)
 DB_PATH=vectorstore/db // Or another path
 COLLECTION_NAME=good-code // Or name for your VectorStore BD
 GIT_TOKEN= // Gitlab token
@@ -41,7 +42,7 @@ GIT_BASE_URL= // Base url for the GitLab project
 GIT_PROJECT_ID= // Project ID
 GIT_MERGE_REQUEST_IID= // Merge Request number
 CODE_MODEL= // Some llm code model
-GEMMA_MODEL= // Some llm conversation model
+CONVERSATION_MODEL= // Some llm conversation model
 ```
 
 > ⚠️ Important: Now this application now supports GitLab
