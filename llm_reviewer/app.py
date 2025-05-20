@@ -9,7 +9,12 @@ from langchain_core.documents import Document
 from langchain_docling import DoclingLoader
 
 from llm_reviewer.git import Git
-from llm_reviewer.llm import LLM, AcceptableLLMModels, PromptTemplate
+from llm_reviewer.llm import (
+    LLM,
+    AcceptableLLMModels,
+    PromptTemplate,
+    AcceptableLLMProviders,
+)
 from llm_reviewer.vector_store import VectorStore
 from llm_reviewer.embeddings import Embedding, AcceptableEmbeddings
 
@@ -72,13 +77,18 @@ def load_knowledge_base() -> VectorStore:
 
 def load_conversation_model():
     print("🤖 Loading conversation llm model")
-    llm = LLM(model=AcceptableLLMModels.CONVERSATION_MODEL)
+    llm = LLM(
+        model=AcceptableLLMModels.CONVERSATION_MODEL,
+        provider=AcceptableLLMProviders.OPENAI,
+    )
     return llm.model
 
 
 def load_code_model():
     print("🧑‍💻 Loading coder llm model")
-    llm = LLM(model=AcceptableLLMModels.CODE_MODEL)
+    llm = LLM(
+        model=AcceptableLLMModels.CODE_MODEL, provider=AcceptableLLMProviders.OPENAI
+    )
     return llm.model
 
 
