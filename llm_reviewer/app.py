@@ -127,6 +127,23 @@ def format_and_save_json_response(chain_output):
     return None
 
 
+def get_pull_request_diff():
+    git = Git(token=os.environ["GIT_TOKEN"])
+    return git.get_diff(
+        project_id=os.environ["GIT_PROJECT_ID"],
+        merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
+    )
+
+
+def write_merge_request_comment(comment: str):
+    git = Git(token=os.environ["GIT_TOKEN"])
+    git.write_comment(
+        project_id=os.environ["GIT_PROJECT_ID"],
+        merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
+        comment=comment,
+    )
+
+
 def main():
     knowledgeBase = load_knowledge_base()
     llm_code_model = load_code_model()
@@ -134,12 +151,7 @@ def main():
     llm_conversation_model = load_conversation_model()
     response_prompt = LLM.load_prompt(prompt=PromptTemplate.RESPONSE)
 
-    token = os.environ["GIT_TOKEN"]
-    fetcher = Git(token=token)
-    pull_request = fetcher.get_diff(
-        project_id=os.environ["GIT_PROJECT_ID"],
-        merge_request_iid=os.environ["GIT_MERGE_REQUEST_IID"],
-    )
+    pull_request = get_pull_request_diff()
 
     embedding = load_embeddings()
 
@@ -178,6 +190,7 @@ def main():
         ) as path:
             with path.open("w", encoding="utf-8") as file:
                 file.write(response_str)
+                write_merge_request_comment(comment=response_str)
 
         print(f"🔥 Created code_review.md file")
     else:
