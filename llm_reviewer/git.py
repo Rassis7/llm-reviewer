@@ -1,6 +1,7 @@
 import gitlab
 from gitlab.exceptions import GitlabAuthenticationError
 import os
+from typing import Any, Dict
 
 git_base_url = os.environ["GIT_BASE_URL"]
 
@@ -30,3 +31,25 @@ class Git:
             )
             all_diffs.append(file_info + change["diff"])
         return "\n\n".join(all_diffs)
+
+    def write_comment(
+        self, project_id: int | str, merge_request_iid: int | str, comment: str
+    ):
+        self.auth()
+        project_obj = self.gl.projects.get(project_id)
+        mr_obj = project_obj.mergerequests.get(merge_request_iid)
+        discussion_id = None
+        discussions = mr_obj.discussions.list()
+
+        for discussion in discussions:
+            discussion_notes = discussion.attributes.get("notes")
+            if discussion_notes is not None:
+                for note in discussion_notes:
+                    if note.get("body").find("Code Review Documentation") != -1:
+                        discussion_id = note.get("id")
+
+        if discussion_id is None:
+            mr_obj.notes.create({"body": comment})
+        else:
+            print("discussion_id", discussion_id)
+            mr_obj.notes.update(id=discussion_id, new_data={"body": comment})

@@ -20,17 +20,32 @@ Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with genera
 
 <img src="docs/rag.png" />
 
-## Running Application (Example) 👀
+## Running Application 👀
 
-### Files
+### Code documentations
 
--> [Good Coding Practices](llm_reviewer/files/good-code.md)
+You need add your code documentations in `llm_reviewer/docs`
 
--> [Pull Request](llm_reviewer/files/pull-request.txt)
+> ⚠️ Important: Your documentations should be in `.pdf`
 
-### Response
+### Environment file
 
-<img src="docs/example.png" />
+After that, you must add the information in `.env`, like:
+
+```
+API_URL=http://localhost:11434 // Or another URL
+API_KEY= // Your LLM api key (if necessary)
+DB_PATH=vectorstore/db // Or another path
+COLLECTION_NAME=good-code // Or name for your VectorStore BD
+GIT_TOKEN= // Gitlab token
+GIT_BASE_URL= // Base url for the GitLab project
+GIT_PROJECT_ID= // Project ID
+GIT_MERGE_REQUEST_IID= // Merge Request number
+CODE_MODEL= // Some llm code model
+CONVERSATION_MODEL= // Some llm conversation model
+```
+
+> ⚠️ Important: Now this application now supports GitLab
 
 ## Stack 🧩
 
@@ -38,6 +53,20 @@ Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with genera
 - **AI Models:** Using LLMs for natural language processing and RAG to retrieve answers based on a knowledge base.
 
 ## Project 🏎️
+
+### Install poetry
+
+To get started, you need [Poetry](https://python-poetry.org/). It's recommended to install it using [pipx](https://pipx.pypa.io/stable/).
+
+Follow this [installation guide](https://pipx.pypa.io/stable/installation/) to set up `pipx`.
+
+Once `pipx` is installed, use the following command to install Poetry:
+
+```bash
+pipx install poetry
+```
+
+That's it! Poetry is now installed on your machine. 🚀
 
 ### Virtual Environment (venv)
 
@@ -105,14 +134,18 @@ poetry run dev
 
 ### Run with local LLM (Extra)
 
+You can download [ollama](https://ollama.com/) to run locally.
+
+Start ollama server in terminal:
+
 ```bash
-docker-compose up
+ollama serve
 ```
 
-> after run project
+Download or run some llm model:
 
 ```bash
-poetry run dev
+ollama run LLM_MODEL_NAME
 ```
 
 ## TODO 📋
