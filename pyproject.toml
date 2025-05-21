@@ -19,6 +19,7 @@ langchain-ollama = "^0.3.2"
 langchain-docling = "^0.2.0"
 langchain-huggingface = "^0.2.0"
 langchain-openai = "^0.3.17"
+python-gitlab = "^5.6.0"
 
 [tool.poetry.scripts]
 dev = "llm_reviewer.app:main"
