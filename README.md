@@ -54,6 +54,20 @@ CONVERSATION_MODEL= // Some llm conversation model
 
 ## Project 🏎️
 
+### Install poetry
+
+To get started, you need [Poetry](https://python-poetry.org/). It's recommended to install it using [pipx](https://pipx.pypa.io/stable/).
+
+Follow this [installation guide](https://pipx.pypa.io/stable/installation/) to set up `pipx`.
+
+Once `pipx` is installed, use the following command to install Poetry:
+
+```bash
+pipx install poetry
+```
+
+That's it! Poetry is now installed on your machine. 🚀
+
 ### Virtual Environment (venv)
 
 > You need `python3` with minimum version `@3.12.4`
