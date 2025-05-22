@@ -154,12 +154,11 @@ ollama run LLM_MODEL_NAME
 
 - [x] Allow the use of more than one model
 - [x] Use various types of embeddings
-- [ ] Add AI agent (next feature)
 - [ ] Enable dynamic uploading of the rules file
-- [ ] Split the DIFF file into individual diffs (by checking the token count)
+- [ ] UI to add and view review infos
 
 ### Nice to Have
 
+- [ ] Add AI agent (next feature)
 - [ ] Function to add the new file to the RAG
-- [ ] Visual interface
 - [ ] Improve the parameters for each LLM
