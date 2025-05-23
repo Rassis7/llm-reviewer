@@ -155,7 +155,7 @@ ollama run LLM_MODEL_NAME
 - [x] Allow the use of more than one model
 - [x] Use various types of embeddings
 - [ ] Enable dynamic uploading of the rules file
-- [ ] UI to add and view review infos
+- [x] UI to add and view review infos
 
 ### Nice to Have
 

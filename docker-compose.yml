@@ -1,14 +1,32 @@
-version: "3.8"
-
 services:
-  ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ollama
+  app:
+    build: .
+    container_name: app
+    env_file:
+      - .env
     ports:
-      - "11434:11434"
+      - 8501:8501
+    volumes:
+      - .:/app
+      - /app/.venv
     restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
 
 volumes:
-  ollama:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
