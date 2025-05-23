@@ -23,6 +23,7 @@ import os
 import importlib.resources
 import json
 import re
+import streamlit as st
 
 
 def load_embeddings():
@@ -31,7 +32,8 @@ def load_embeddings():
 
 
 def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
-    print("🪣 Loading vector store...")
+    st.write("🪣 Loading vector store")
+    print("🪣 Loading vector store")
     embedding = load_embeddings()
 
     return VectorStore().load(
@@ -56,6 +58,7 @@ def normalize_documents():
 
 
 def create_vector_loader() -> VectorStore:
+    st.write("🪣 Creating vector loader")
     print("🪣 Creating vector loader")
     documents = normalize_documents()
     docs = [Document(page_content=doc) for doc in documents]
@@ -67,6 +70,8 @@ def create_vector_loader() -> VectorStore:
 
 
 def load_knowledge_base() -> VectorStore:
+    st.write("🧠 Loading knowledge base")
+    print("🧠 Loading knowledge base")
     if os.path.exists(os.environ["DB_PATH"]):
         db = load_store()
         return db
@@ -76,6 +81,7 @@ def load_knowledge_base() -> VectorStore:
 
 
 def load_conversation_model():
+    st.write("🤖 Loading conversation llm model")
     print("🤖 Loading conversation llm model")
     llm = LLM(
         model=AcceptableLLMModels.CONVERSATION_MODEL,
@@ -85,6 +91,7 @@ def load_conversation_model():
 
 
 def load_code_model():
+    st.write("🧑‍💻 Loading coder llm model")
     print("🧑‍💻 Loading coder llm model")
     llm = LLM(
         model=AcceptableLLMModels.CODE_MODEL, provider=AcceptableLLMProviders.OPENAI
@@ -97,6 +104,7 @@ def format_docs(docs):
 
 
 def map_review_to_format(chain_output):
+    st.write(f"🔍 Mapping review to format")
     print(f"🔍 Mapping review to format")
     return {"reviewed_code": chain_output}
 
@@ -107,6 +115,7 @@ def format_and_save_json_response(chain_output):
         json_str = match.group(0).strip()
         try:
             array_obj = json.loads(json_str)
+            st.write("✅ JSON processed with success!")
             print("✅ JSON processed with success!")
 
             with importlib.resources.path(
@@ -115,13 +124,18 @@ def format_and_save_json_response(chain_output):
                 with path.open("w", encoding="utf-8") as file:
                     json.dump(array_obj, file, indent=4, ensure_ascii=False)
 
-            print("📂 JSON response saved in 'code_review.json'")
+            st.write(
+                "📂 JSON response saved in 'llm_reviewer.response.code_review.json'"
+            )
+            print("📂 JSON response saved in 'llm_reviewer.response.code_review.json'")
             return array_obj
 
         except json.JSONDecodeError as e:
+            st.write("❌ JSON Decode error:", e)
             print("❌ JSON Decode error:", e)
 
     else:
+        st.write("❌ No JSON found")
         print("❌ No JSON found")
 
     return None
@@ -144,7 +158,7 @@ def write_merge_request_comment(comment: str):
     )
 
 
-def main():
+def run_review():
     knowledgeBase = load_knowledge_base()
     llm_code_model = load_code_model()
     context_prompt = LLM.load_prompt(prompt=PromptTemplate.CONTEXT)
@@ -190,12 +204,16 @@ def main():
         ) as path:
             with path.open("w", encoding="utf-8") as file:
                 file.write(response_str)
-                write_merge_request_comment(comment=response_str)
+                # write_merge_request_comment(comment=response_str)
 
+        st.write(f"🔥 Created code_review.md file")
         print(f"🔥 Created code_review.md file")
+        return response_str
     else:
+        st.write("❌ No response generated")
         print("❌ No response generated")
+        return None
 
 
 if __name__ == "__main__":
-    main()
+    run_review()

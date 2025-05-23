@@ -72,6 +72,7 @@ class VectorStore(IVectorStore):
                 collection_name=collection_name,
             )
 
+
         return VectorStore(store)
 
     def save_documents(self, documents: List[Document]):
@@ -106,9 +107,36 @@ class VectorStore(IVectorStore):
 
         similar_documents = self.store.similarity_search(query, k=k)
 
-        temp_store = Chroma.from_documents(
+        temp_store = self.store.from_documents(
             documents=similar_documents, embedding=embeddings
         )
 
         print("⚡️ getting similar retriever")
         return temp_store.as_retriever()
+
+    # def get_retriever_from_similar(
+    #     self, query: str, embeddings: Embeddings, k: int = 4
+    # ):
+    #     if not self.store:
+    #         raise ValueError("VectorStore não foi carregado. Chame `load()` primeiro.")
+
+    #     # Não criar nova instância - usar a existente com busca similar
+    #     similar_documents = self.store.similarity_search(query, k=k)
+
+    #     # Extrair IDs dos documentos similares
+    #     doc_ids = []
+    #     for doc in similar_documents:
+    #         if hasattr(doc, "metadata") and doc.metadata.get("id"):
+    #             doc_ids.append(doc.metadata["id"])
+
+    #     # Usar o store existente com filtro (se possível)
+    #     if doc_ids:
+    #         retriever = self.store.as_retriever(
+    #             search_kwargs={"k": k, "filter": {"id": {"$in": doc_ids}}}
+    #         )
+    #     else:
+    #         # Fallback: retriever normal limitado
+    #         retriever = self.store.as_retriever(search_kwargs={"k": k})
+
+    #     print("⚡️ reutilizando store existente")
+    #     return retriever
