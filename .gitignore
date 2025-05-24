@@ -5,6 +5,7 @@ vectorstore
 llm_reviewer/__pycache__
 llm_reviewer/streamlit/__pycache__
 streamlit/__pycache__
-llm_reviewer/docs
 llm_reviewer/response/*.md
 llm_reviewer/response/*.json
+llm_reviewer/docs/*
+!llm_reviewer/docs/standard_documentation.pdf
