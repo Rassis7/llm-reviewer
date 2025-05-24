@@ -14,19 +14,16 @@ This tool analyzes code blocks and returns suggestions, identifies inadequate st
 - **Customization and Extensibility:**  
   The project was developed with extensibility in mind, allowing users to adjust parameters, improve language models, and expand features when necessary.
 
-## What is RAG? 🤨
+<details>
+  <summary><strong>What is RAG? 🤨</strong></summary>
+  Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with generative models. It first fetches contextually relevant external information, then leverages this data to produce enhanced, accurate, and informed responses—allowing AI to generate context-aware outputs beyond its static training data.
 
-Retrieval-Augmented Generation (RAG) integrates retrieval mechanisms with generative models. It first fetches contextually relevant external information, then leverages this data to produce enhanced, accurate, and informed responses—allowing AI to generate context-aware outputs beyond its static training data.
-
-<img src="docs/rag.png" />
+  <img src="docs/rag.png" />
+</details>
 
 ## Running Application 👀
 
 ### Code documentations
-
-You need add your code documentations in `llm_reviewer/docs`
-
-> ⚠️ Important: Your documentations should be in `.pdf`
 
 ### Environment file
 
@@ -45,14 +42,63 @@ CODE_MODEL= // Some llm code model
 CONVERSATION_MODEL= // Some llm conversation model
 ```
 
-> ⚠️ Important: Now this application now supports GitLab
+> ⚠️ Important: This application now supports GitLab
 
 ## Stack 🧩
 
 - **Language:** Python, Poetry and LangChain
 - **AI Models:** Using LLMs for natural language processing and RAG to retrieve answers based on a knowledge base.
 
-## Project 🏎️
+## Streamlit UI via Docker 🐳 (recommended)
+
+### Prerequisites
+
+- Docker
+- `docker-compose` (or Make)
+
+### Quick Start
+
+Build and launch the UI and its Redis dependency:
+
+```bash
+# If you have a Makefile
+make docker-up
+
+# Or directly with Docker Compose
+# docker-compose up --build # legacy
+docker compose up --build
+```
+
+Then open your browser at:
+
+```
+http://localhost:8501
+```
+
+### UI Preview
+
+![Streamlit UI Screenshot](docs/ui.png)
+
+### Features
+
+- **Git Project Manager**
+  Add, remove and review multiple Git repositories in one place.
+- **API Key Configuration**
+  Update your `OPENAI_API_KEY` on-the-fly from the sidebar.
+- **Knowledge Base Upload**
+  Upload PDF to enrich the LLM’s context for more accurate reviews.
+- **Built-in Sample Doc**
+  A boilerplate code-documentation PDF is available at
+  `llm_reviewer/docs/standard_documentation.pdf`.
+
+💡 **Live Reload**
+All local code changes are mirrored into the container (via a volume), so edits appear instantly—no rebuild required.
+
+---
+
+## Terminal way 👨‍💻
+
+You can run via terminal
 
 ### Install poetry
 
@@ -87,7 +133,10 @@ The currently activated Python version 3.X.X is not supported by the project (3.
 Trying to find and use a compatible version.
 ```
 
-Install `pyenv`:
+You need install `pyenv`
+
+<details>
+<summary><strong>Install `pyenv`</strong></summary>
 
 Macos
 
@@ -114,6 +163,8 @@ pyenv local 3.12.4
 poetry env use $(pyenv which python)
 ```
 
+</details>
+
 ### Install deps
 
 ```bash
@@ -132,34 +183,75 @@ poetry self add poetry-plugin-dotenv
 poetry run dev
 ```
 
-### Run with local LLM (Extra)
+## Run with a Local LLM (Optional)
 
-You can download [ollama](https://ollama.com/) to run locally.
+Leverage Ollama to run your models entirely on-premise.
 
-Start ollama server in terminal:
+### Prerequisites
+
+- Install Ollama: [https://ollama.com/](https://ollama.com/)
+- Pull or run at least one Ollama model (e.g. `llama2`, `codewizard`).
+
+### 1. Start the Ollama Server
 
 ```bash
 ollama serve
 ```
 
-Download or run some llm model:
+By default, this will listen on `http://localhost:11434`.
+
+### 2. Download or Run a Model
 
 ```bash
-ollama run LLM_MODEL_NAME
+# Pull a model to your local cache
+ollama pull <MODEL_NAME>
+
+# Or directly run (it will auto-pull if missing)
+ollama run <MODEL_NAME>
 ```
 
-## TODO 📋
+### 3. Configure Your Environment
 
-### Must Have
+Add your chosen models to the `.env` file:
 
-- [x] Allow the use of more than one model
-- [x] Use various types of embeddings
-- [ ] Add AI agent (next feature)
-- [ ] Enable dynamic uploading of the rules file
-- [ ] Split the DIFF file into individual diffs (by checking the token count)
+```env
+# ollama default ulr (or other if you changed)
+API_URL=http://localhost:11434
 
-### Nice to Have
+# for code review / analysis
+CODE_MODEL=<MODEL_NAME>
 
-- [ ] Function to add the new file to the RAG
-- [ ] Visual interface
-- [ ] Improve the parameters for each LLM
+# for free-form conversation / chat
+CONVERSATION_MODEL=<MODEL_NAME>
+```
+
+### 4. Instantiate the LLM in Python
+
+```python
+from llm_reviewer.llm import LLM, AcceptableLLMModels, AcceptableLLMProviders
+
+llm = LLM(
+    model=AcceptableLLMModels.CONVERSATION_MODEL,
+    provider=AcceptableLLMProviders.OLLAMA,
+)
+```
+
+Now, when you run the Streamlit app (`docker compose up` or `make docker-up`), it will connect to your local Ollama instance instead of OpenAI.
+
+## 📋 Roadmap
+
+<details>
+<summary><strong>Must-Have</strong></summary>
+
+- [x] Multiple model support
+- [x] Custom embeddings
+- [x] Dynamic PDF uploads
+- [ ] Auto-updating vector store (add, update, delete)
+</details>
+
+<details>
+<summary><strong>Nice-to-Have</strong></summary>
+
+- [ ] Auto-review agent
+- [ ] More platform integrations
+</details>
