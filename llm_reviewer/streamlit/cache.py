@@ -28,7 +28,6 @@ def get(key: str) -> Dict[str, str] | None:
         value = client.get(key)
         if value:
             json_value = json.loads(value.decode("utf-8"))
-            print(f"Got value from Redis: {json_value}")
             return json_value
         else:
             print(f"No value found for key: {key}")
