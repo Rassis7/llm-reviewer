@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from llm_reviewer.streamlit.cache import get_all, set, get
-from llm_reviewer.app import run_review, normalize_documents, load_embeddings
+from llm_reviewer.app import run_review, save_vector_store_documents
 
 st.set_page_config(
     page_title="Revisor de código com IA", page_icon="🤖", layout="centered"
@@ -37,7 +37,6 @@ def add_project_modal():
 
 @st.dialog("Documentações de código")
 def handle_documentations():
-
     target = os.path.join(os.path.dirname(__file__), "../docs")
     files = os.listdir(target)
 
@@ -60,33 +59,23 @@ def handle_documentations():
     uploaded = st.file_uploader(
         "Fazer upload de documentações", accept_multiple_files=True
     )
+    file_name = ""
     if uploaded:
         for file in uploaded:
             path = os.path.join(target, file.name)
             with open(path, "wb") as out:
+                file_name = file.name
                 out.write(file.getbuffer())
         st.success(f"{len(uploaded)} arquivo(s) enviado(s) para `{target}`!")
 
         update_context = st.button("Atualizar contexto")
         if update_context:
-            from llm_reviewer.vector_store import VectorStore
-
             try:
                 st.warning(
                     "O contexto da LLM está sendo atualizado, por favor aguarde..."
                 )
 
-                embedding = load_embeddings()
-                vector_store = VectorStore().load(
-                    path=os.environ["DB_PATH"],
-                    collection_name=os.environ["COLLECTION_NAME"],
-                    embedding=embedding,
-                )
-
-                documents = normalize_documents()
-                docs = [Document(page_content=doc) for doc in documents]
-
-                vector_store.save_documents(docs)
+                save_vector_store_documents(file_name)
                 st.success("Contexto atualizado com sucesso!")
             except Exception as e:
                 st.error(f"Erro ao atualizar o contexto: {e}")
