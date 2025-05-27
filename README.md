@@ -40,6 +40,9 @@ GIT_PROJECT_ID= // Project ID
 GIT_MERGE_REQUEST_IID= // Merge Request number
 CODE_MODEL= // Some llm code model
 CONVERSATION_MODEL= // Some llm conversation model
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_DB=0
 ```
 
 > ⚠️ Important: This application now supports GitLab
