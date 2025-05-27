@@ -50,6 +50,6 @@ class Git:
 
         if discussion_id is None:
             mr_obj.notes.create({"body": comment})
-        else:
-            print("discussion_id", discussion_id)
-            mr_obj.notes.update(id=discussion_id, new_data={"body": comment})
+            return
+
+        mr_obj.notes.update(id=discussion_id, new_data={"body": comment})

@@ -6,7 +6,6 @@ from langchain_core.runnables import (
 )
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
-from langchain_docling import DoclingLoader
 
 from llm_reviewer.git import Git
 from llm_reviewer.llm import (
@@ -17,12 +16,17 @@ from llm_reviewer.llm import (
 )
 from llm_reviewer.vector_store import VectorStore
 from llm_reviewer.embeddings import Embedding, AcceptableEmbeddings
+from llm_reviewer.documents import (
+    convert_to_markdown,
+    format_docs,
+    format_and_save_json_response,
+)
 
 from typing import Optional, List
 import os
 import importlib.resources
-import json
-import re
+
+import streamlit as st
 
 
 def load_embeddings():
@@ -31,9 +35,10 @@ def load_embeddings():
 
 
 def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
-    print("🪣 Loading vector store...")
-    embedding = load_embeddings()
+    st.write("🪣 Loading vector store")
+    print("🪣 Loading vector store")
 
+    embedding = load_embeddings()
     return VectorStore().load(
         path=os.environ["DB_PATH"],
         collection_name=os.environ["COLLECTION_NAME"],
@@ -42,28 +47,33 @@ def load_store(documents: Optional[List[Document]] = None) -> VectorStore:
     )
 
 
-def normalize_documents():
-    docs_dir = os.path.join(os.path.dirname(__file__), "../llm_reviewer/docs")
-    file_paths = [
-        os.path.join(docs_dir, f)
-        for f in os.listdir(docs_dir)
-        if os.path.isfile(os.path.join(docs_dir, f))
-    ]
-    loader = DoclingLoader(file_paths)
-    documents = loader.load()
-    markdown_docs = [doc.page_content for doc in documents]
-    return markdown_docs
-
-
 def create_vector_loader() -> VectorStore:
+    st.write("🪣 Creating vector loader")
     print("🪣 Creating vector loader")
-    documents = normalize_documents()
+    documents = convert_to_markdown()
     docs = [Document(page_content=doc) for doc in documents]
 
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     split_docs = text_splitter.split_documents(docs)
 
     return load_store(split_docs)
+
+
+def save_vector_store_documents(file_name: Optional[str] = None):
+    st.write("🪣 Saving vector store")
+    print("🪣 Saving vector store")
+
+    embedding = load_embeddings()
+    vector_store = VectorStore().load(
+        path=os.environ["DB_PATH"],
+        collection_name=os.environ["COLLECTION_NAME"],
+        embedding=embedding,
+    )
+
+    documents = convert_to_markdown(file_name=file_name)
+    docs = [Document(page_content=doc) for doc in documents]
+
+    vector_store.save_documents(docs)
 
 
 def load_knowledge_base() -> VectorStore:
@@ -76,6 +86,7 @@ def load_knowledge_base() -> VectorStore:
 
 
 def load_conversation_model():
+    st.write("🤖 Loading conversation llm model")
     print("🤖 Loading conversation llm model")
     llm = LLM(
         model=AcceptableLLMModels.CONVERSATION_MODEL,
@@ -85,6 +96,7 @@ def load_conversation_model():
 
 
 def load_code_model():
+    st.write("🧑‍💻 Loading coder llm model")
     print("🧑‍💻 Loading coder llm model")
     llm = LLM(
         model=AcceptableLLMModels.CODE_MODEL, provider=AcceptableLLMProviders.OPENAI
@@ -92,39 +104,10 @@ def load_code_model():
     return llm.model
 
 
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
-
-
 def map_review_to_format(chain_output):
+    st.write(f"🔍 Mapping review to format")
     print(f"🔍 Mapping review to format")
     return {"reviewed_code": chain_output}
-
-
-def format_and_save_json_response(chain_output):
-    match = re.search(r"\[\s*\{.*\}\s*\]", chain_output, re.DOTALL)
-    if match:
-        json_str = match.group(0).strip()
-        try:
-            array_obj = json.loads(json_str)
-            print("✅ JSON processed with success!")
-
-            with importlib.resources.path(
-                "llm_reviewer.response", "code_review.json"
-            ) as path:
-                with path.open("w", encoding="utf-8") as file:
-                    json.dump(array_obj, file, indent=4, ensure_ascii=False)
-
-            print("📂 JSON response saved in 'code_review.json'")
-            return array_obj
-
-        except json.JSONDecodeError as e:
-            print("❌ JSON Decode error:", e)
-
-    else:
-        print("❌ No JSON found")
-
-    return None
 
 
 def get_pull_request_diff():
@@ -144,7 +127,7 @@ def write_merge_request_comment(comment: str):
     )
 
 
-def main():
+def run_review():
     knowledgeBase = load_knowledge_base()
     llm_code_model = load_code_model()
     context_prompt = LLM.load_prompt(prompt=PromptTemplate.CONTEXT)
@@ -192,10 +175,14 @@ def main():
                 file.write(response_str)
                 write_merge_request_comment(comment=response_str)
 
+        st.write(f"🔥 Created code_review.md file")
         print(f"🔥 Created code_review.md file")
+        return response_str
     else:
+        st.write("❌ No response generated")
         print("❌ No response generated")
+        return None
 
 
 if __name__ == "__main__":
-    main()
+    run_review()
