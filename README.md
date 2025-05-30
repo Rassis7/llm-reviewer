@@ -43,6 +43,8 @@ CONVERSATION_MODEL= // Some llm conversation model
 REDIS_HOST=redis
 REDIS_PORT=6379
 REDIS_DB=0
+STREAMLIT_SERVER_ENABLE_FILE_WATCHER=false
+POST_PULL_REQUEST_COMMENT=true
 ```
 
 > ⚠️ Important: This application now supports GitLab
