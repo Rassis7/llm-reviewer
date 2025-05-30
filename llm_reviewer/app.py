@@ -173,7 +173,8 @@ def run_review():
         ) as path:
             with path.open("w", encoding="utf-8") as file:
                 file.write(response_str)
-                write_merge_request_comment(comment=response_str)
+                if os.environ.get("POST_PULL_REQUEST_COMMENT"):
+                    write_merge_request_comment(comment=response_str)
 
         st.write(f"🔥 Created code_review.md file")
         print(f"🔥 Created code_review.md file")

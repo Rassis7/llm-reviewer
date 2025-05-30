@@ -1,11 +1,16 @@
 import streamlit as st
 import sys
 import os
+import torch
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from llm_reviewer.streamlit.cache import get_all, set, get
 from llm_reviewer.app import run_review, save_vector_store_documents
+
+# To remove error: RuntimeError: no running event loop
+torch.classes.__path__ = [os.path.join(torch.__path__[0], torch.classes.__file__)]
+torch.classes.__path__ = []
 
 st.set_page_config(
     page_title="Revisor de código com IA", page_icon="🤖", layout="centered"
@@ -142,15 +147,21 @@ with st.container():
         pull_request_id and selected_repo["api_key"] and selected_repo["project_id"]
     )
 
+    is_post_comment = st.checkbox(
+        "Postar comentário no Pull Request",
+        key="post_pull_request_comment",
+        value=os.environ["POST_PULL_REQUEST_COMMENT"] == "true",
+    )
+
     if st.button("Revisar código"):
         if not is_enabled:
             st.warning("Preencha todos os campos para revisar o código.")
         else:
 
             if open_ai_api_key:
-                set(open_ai_api_key, "openai_key")
                 os.environ["API_KEY"] = open_ai_api_key
 
+            os.environ["POST_PULL_REQUEST_COMMENT"] = str(is_post_comment)
             os.environ["GIT_TOKEN"] = selected_repo["api_key"]
             os.environ["GIT_PROJECT_ID"] = selected_repo["project_id"]
             os.environ["GIT_MERGE_REQUEST_IID"] = str(pull_request_id)
