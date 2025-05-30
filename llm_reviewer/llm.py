@@ -37,18 +37,18 @@ class LLM:
         self.__load(provider)
 
     def __load(self, provider: AcceptableLLMProviders):
+        base_url = os.environ.get("API_URL")
+
         if provider == AcceptableLLMProviders.OLLAMA:
             self.model = ChatOllama(
                 model=self.__llm_model.value,
-                base_url=os.environ["API_URL"],
+                base_url=base_url,
                 temperature=0.3,
             )
         elif provider == AcceptableLLMProviders.OPENAI:
             self.model = ChatOpenAI(
                 model=self.__llm_model.value,
-                base_url=os.environ["API_URL"],
-                temperature=0,
-                max_completion_tokens=700,
+                base_url=base_url,
                 timeout=None,
                 api_key=SecretStr(os.environ["API_KEY"]),
             )
